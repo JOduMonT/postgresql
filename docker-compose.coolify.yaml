@@ -10,7 +10,7 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
-      - postgresql-data-v18:/var/lib/postgresql/data
+      - postgresql-data-v18:/var/lib/postgresql
     networks:
       - coolify
 
@@ -18,6 +18,13 @@ volumes:
   # Named distinctly from the old postgresql-data volume (16-alpine's data dir, kept as a
   # rollback point) rather than reusing that name — Postgres major versions are not
   # in-place upgradeable; a fresh volume + pg_dumpall restore is the migration path.
+  #
+  # Mount point is /var/lib/postgresql (not .../data) — the official image changed its
+  # expected convention starting at 18: it now stores data in a major-version-specific
+  # subdirectory under this path (supporting pg_ctlcluster-style upgrades) and refuses to
+  # start if anything is mounted at the old /var/lib/postgresql/data path, even an empty
+  # volume — found this out by deploying it and reading the crash log, not from the
+  # release notes.
   postgresql-data-v18:
 
 networks:

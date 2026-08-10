@@ -1,0 +1,22 @@
+# Deployed by Coolify as this repo's docker_compose_location. Differs from
+# docker-compose.yaml only in the network: joins the pre-existing external `coolify`
+# network so Traefik and other tenant apps can reach this container by service name
+# (`postgresql`) — see README for why this is a separate file rather than the default.
+services:
+  postgresql:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
+    volumes:
+      - postgresql-data:/var/lib/postgresql/data
+    networks:
+      - coolify
+
+volumes:
+  postgresql-data:
+
+networks:
+  coolify:
+    external: true

@@ -13,6 +13,44 @@ services:
       - postgresql-data-v18:/var/lib/postgresql
     networks:
       - coolify
+    # Security hardening (OWASP Docker Security Cheat Sheet). Every value here was verified
+    # against real throwaway containers first — both a fresh init and a restart on existing
+    # data (the scenario every redeploy of this live instance actually hits) — not guessed:
+    # - cap_add: postgres's own entrypoint needs these five specifically to chown/chmod the
+    #   data dir and drop from root to the postgres user on startup. cap_drop: ALL alone
+    #   breaks it (`chmod: /var/run/postgresql: Operation not permitted`).
+    # - read_only + tmpfs: /var/lib/postgresql (the real data) is already a named volume, so
+    #   it stays writable regardless of read_only. Postgres also needs /tmp and
+    #   /var/run/postgresql (its default Unix socket) writable — confirmed by testing, real
+    #   CREATE TABLE/INSERT/SELECT queries succeed against this exact configuration.
+    cap_drop:
+      - ALL
+    cap_add:
+      - CHOWN
+      - FOWNER
+      - DAC_OVERRIDE
+      - SETUID
+      - SETGID
+    security_opt:
+      - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp
+      - /var/run/postgresql
+    mem_limit: 1g
+    cpus: 1.0
+    pids_limit: 200
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 volumes:
   # Named distinctly from the old postgresql-data volume (16-alpine's data dir, kept as a

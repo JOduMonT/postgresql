@@ -4,18 +4,21 @@
 # (`postgresql`) — see README for why this is a separate file rather than the default.
 services:
   postgresql:
-    image: postgres:16-alpine
+    image: postgres:18-alpine
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set}
     volumes:
-      - postgresql-data:/var/lib/postgresql/data
+      - postgresql-data-v18:/var/lib/postgresql/data
     networks:
       - coolify
 
 volumes:
-  postgresql-data:
+  # Named distinctly from the old postgresql-data volume (16-alpine's data dir, kept as a
+  # rollback point) rather than reusing that name — Postgres major versions are not
+  # in-place upgradeable; a fresh volume + pg_dumpall restore is the migration path.
+  postgresql-data-v18:
 
 networks:
   coolify:

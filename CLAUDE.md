@@ -10,7 +10,7 @@ database. It must **never** get a public domain or a published host port — it'
 not a web service. When creating the Coolify application, explicitly suppress the
 auto-assigned domain: `PATCH /applications/<uuid>` with
 `{"docker_compose_domains": [{"name":"postgresql","domain":""}]}` — Coolify assigns a random
-public `<uuid>.jdmnt.co` hostname by default if you don't.
+public `<uuid>.<your-domain>` hostname by default if you don't.
 
 ## Apps get a database, never their own Postgres container
 

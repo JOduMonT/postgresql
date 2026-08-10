@@ -1,7 +1,8 @@
 # postgresql
 
-Shared PostgreSQL 16 instance. Standalone-usable with plain Docker Compose, or deployed as
-shared tenant infrastructure on Coolify.
+Shared PostgreSQL instance, pinned to the latest stable alpine tag (see the `image:` line in
+`docker-compose.yaml` for the exact version currently deployed). Standalone-usable with plain
+Docker Compose, or deployed as shared tenant infrastructure on Coolify.
 
 ## Standalone
 

@@ -66,6 +66,25 @@ log; it's not corrupted output.
 Full worked example with real numbers: this repo's sibling `specs/postgresql.md` in the
 fleet Hub, if you have access to it — otherwise the steps above are the complete recipe.
 
+## Security hardening
+
+Both compose files carry a hardening block per the
+[OWASP Docker Security Cheat Sheet](https://cheatsheetseries.owasp.org/cheatsheets/Docker_Security_Cheat_Sheet.html):
+healthcheck (`pg_isready`), log rotation, dropped capabilities, `no-new-privileges`,
+resource limits, and a read-only root filesystem. Validated against real containers — both a
+fresh init and a restart against existing data — before landing on the live instance; a real
+`CREATE TABLE`/`INSERT`/`SELECT` round-trip succeeded in both scenarios.
+
+**`cap_drop: ALL` alone breaks Postgres's own entrypoint.** It needs five specific
+capabilities back — `CHOWN`, `FOWNER`, `DAC_OVERRIDE`, `SETUID`, `SETGID` — to fix the data
+directory's ownership and drop privileges from root to the `postgres` user on startup.
+Without them: `chmod: /var/run/postgresql: Operation not permitted`, and the container
+exits immediately.
+
+**`read_only: true` needs two `tmpfs` mounts.** `/var/lib/postgresql` (the real data) is
+already a named volume, so it stays writable regardless. Postgres also needs `/tmp` and
+`/var/run/postgresql` (its default Unix socket) writable — nothing else.
+
 ## Known gap: no scheduled backups
 
 This runs as a Coolify `dockercompose` application, not a Coolify-managed database resource
